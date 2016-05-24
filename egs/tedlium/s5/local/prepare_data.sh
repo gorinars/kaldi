@@ -31,14 +31,14 @@ for set in dev test train; do
 ;; LABEL "female" "Female" "Female Talkers"
 ;;'
     # Process the STMs
-    cat db/TEDLIUM_release1/$set/stm/*.stm | sort -k1,1 -k2,2 -k4,4n | \
+    cat db/TEDLIUM_release2/$set/stm/*.stm | sort -k1,1 -k2,2 -k4,4n | \
       sed -e 's:<F0_M>:<o,f0,male>:' \
           -e 's:<F0_F>:<o,f0,female>:' \
           -e 's:([0-9])::g' \
           -e 's:<sil>::g' \
           -e 's:([^ ]*)$::' | \
       awk '{ $2 = "A"; print $0; }'
-  } | local/join_suffix.py db/TEDLIUM_release1/TEDLIUM.150K.dic > data/$set/stm 
+  } | local/join_suffix.py db/TEDLIUM_release2/TEDLIUM.152k.dic > data/$set/stm 
 
   # Prepare 'text' file
   # - {NOISE} -> [NOISE] : map the tags to match symbols in dictionary
