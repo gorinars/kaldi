@@ -63,10 +63,6 @@ else
 fi
 # Set various variables.
 
-if [ -z "$pca_dim" ]; then
-  pca_dim=`feat-to-dim scp:$dir/ivector.scp ark,t:- | head -n 1 | awk '{print $2}'`
-fi
-
 mkdir -p $dir/log
 sdata=$data/split$nj;
 utils/split_data.sh $data $nj || exit 1;
@@ -124,6 +120,9 @@ if [ $stage -le 2 ]; then
 fi
 
 if [ $stage -le 3 ]; then
+  if [ -z "$pca_dim" ]; then
+    pca_dim=-1
+  fi
   echo "$0: Computing whitening transform"
   $cmd $dir/log/transform.log \
     est-pca --read-vectors=true --normalize-mean=false \

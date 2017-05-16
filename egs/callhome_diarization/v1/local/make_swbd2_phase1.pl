@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 #
-# Copyright   2013   Daniel Povey
+# Copyright   2017   David Snyder
 # Apache 2.0
 
 if (@ARGV != 2) {
-  print STDERR "Usage: $0 <path-to-LDC99S79> <path-to-output>\n";
-  print STDERR "e.g. $0 /export/corpora5/LDC/LDC99S79 data/swbd2_phase2_train\n";
+  print STDERR "Usage: $0 <path-to-LDC98S75> <path-to-output>\n";
+  print STDERR "e.g. $0 /export/corpora3/LDC/LDC98S75 data/swbd2_phase1_train\n";
   exit(1);
 }
 ($db_base, $out_dir) = @ARGV;
@@ -14,8 +14,7 @@ if (system("mkdir -p $out_dir")) {
   die "Error making directory $out_dir";
 }
 
-open(CS, "<$db_base/DISC1/doc/callstat.tbl") || die  "Could not open $db_base/DISC1/doc/callstat.tbl";
-open(CI, "<$db_base/DISC1/doc/callinfo.tbl") || die  "Could not open $db_base/DISC1/doc/callinfo.tbl";
+open(CS, "<$db_base/doc/callstat.tbl") || die  "Could not open $db_base/doc/callstat.tbl";
 open(GNDR, ">$out_dir/spk2gender") || die "Could not open the output file $out_dir/spk2gender";
 open(SPKR, ">$out_dir/utt2spk") || die "Could not open the output file $out_dir/utt2spk";
 open(WAV, ">$out_dir/wav.scp") || die "Could not open the output file $out_dir/wav.scp";
@@ -33,30 +32,30 @@ if (system("find $db_base -name '*.sph' > $tmp_dir/sph.list") != 0) {
 
 open(WAVLIST, "<", "$tmp_dir/sph.list") or die "cannot open wav list";
 
+%wavs = ();
 while(<WAVLIST>) {
   chomp;
   $sph = $_;
   @t = split("/",$sph);
   @t1 = split("[./]",$t[$#t]);
-  $uttId=$t1[0];
-  $wav{$uttId} = $sph;
+  $uttId = $t1[0];
+  $wavs{$uttId} = $sph;
 }
 
 
 while (<CS>) {
   $line = $_ ;
-  $ci = <CI>;
-  $ci = <CI>;
-  @ci = split(",",$ci);
-  $wav = $ci[0];
   @A = split(",", $line);
+  @A1 = split("[./]",$A[0]);
+  $wav = $A1[0];
   if (/$wav/i ~~ @badAudio) {
     # do nothing
+    print "Bad Audio = $wav";
   } else {
     $spkr1= "sw_" . $A[2];
     $spkr2= "sw_" . $A[3];
-    $gender1 = $A[4];
-    $gender2 = $A[5];
+    $gender1 = $A[5];
+    $gender2 = $A[6];
     if ($gender1 eq "M") {
       $gender1 = "m";
     } elsif ($gender1 eq "F") {
@@ -71,13 +70,13 @@ while (<CS>) {
     } else {
       die "Unknown Gender in $line";
     }
-    if (-e "$wav{$wav}") {
+    if (-e "$wavs{$wav}") {
       $uttId = $spkr1 ."_" . $wav ."_1";
       if (!$spk2gender{$spkr1}) {
         $spk2gender{$spkr1} = $gender1;
         print GNDR "$spkr1"," $gender1\n";
       }
-      print WAV "$uttId"," sph2pipe -f wav -p -c 1 $wav{$wav} |\n";
+      print WAV "$uttId"," sph2pipe -f wav -p -c 1 $wavs{$wav} |\n";
       print SPKR "$uttId"," $spkr1","\n";
 
       $uttId = $spkr2 . "_" . $wav ."_2";
@@ -85,10 +84,10 @@ while (<CS>) {
         $spk2gender{$spkr2} = $gender2;
         print GNDR "$spkr2"," $gender2\n";
       }
-      print WAV "$uttId"," sph2pipe -f wav -p -c 2 $wav{$wav} |\n";
+      print WAV "$uttId"," sph2pipe -f wav -p -c 2 $wavs{$wav} |\n";
       print SPKR "$uttId"," $spkr2","\n";
     } else {
-      print STDERR "Missing $wav{$wav} for $wav\n";
+      print STDERR "Missing $wavs{$wav} for $wav\n";
     }
   }
 }

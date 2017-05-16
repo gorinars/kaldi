@@ -46,10 +46,10 @@ while (<CS>) {
   @A = split(",", $line);
   $wav = "sw_" . $A[0] ;
   if (/$wav/i ~~ @badAudio) {
-    # do nothing 
+    # do nothing
   } else {
-    $spkr1= "sp3_" . $A[3];
-    $spkr2= "sp3_" . $A[4];
+    $spkr1= "sw_" . $A[3];
+    $spkr2= "sw_" . $A[4];
     $gender1 = $A[5];
     $gender2 = $A[6];
     if ($gender1 eq "M") {
