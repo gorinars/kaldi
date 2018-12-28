@@ -883,6 +883,33 @@ Real VectorBase<Real>::ApplyLogSoftMax() {
   return max + sum;
 }
 
+template<typename Real>
+Real VectorBase<Real>::ApplyAMSoftMax(Real ms) {
+  Real max = this->Max(), sum = 0.0;
+  for (MatrixIndexT i = 0; i < dim_; i++) {
+    sum += (data_[i] = Exp(data_[i] - max));
+  }
+  for (MatrixIndexT i = 0; i < dim_; i++) {
+    Real data_w_margin = data_[i] / Exp(ms);
+    data_[i] = data_w_margin / ( sum - data_[i] + data_w_margin );
+  }
+  return max + Log(sum);
+}
+
+template<typename Real>
+Real VectorBase<Real>::ApplyLogAMSoftMax(Real ms) {
+  Real max = this->Max(), sum = 0.0;
+  for (MatrixIndexT i = 0; i < dim_; i++) {
+    sum += Exp((data_[i] -= max));
+  }
+  for (MatrixIndexT i = 0; i < dim_; i++) {
+    Real data_w_margin = data_[i] - ms;
+    data_[i] = data_w_margin - Log( sum - Exp(data_[i]) + Exp(data_w_margin) );
+  }
+  sum = Log(sum);
+  return max + sum;
+}
+
 #ifdef HAVE_MKL
 template<>
 void VectorBase<float>::Tanh(const VectorBase<float> &src) {

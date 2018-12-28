@@ -154,6 +154,9 @@ class VectorBase {
   /// This is the same as: \f$ x(i) = x(i) - log(\sum_i exp(x(i))) \f$
   Real ApplyLogSoftMax();
 
+  Real ApplyAMSoftMax(Real ms);
+  Real ApplyLogAMSoftMax(Real ms);
+
   /// Sets each element of *this to the tanh of the corresponding element of "src".
   void Tanh(const VectorBase<Real> &src);
 

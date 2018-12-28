@@ -3596,12 +3596,66 @@ void SoftmaxComponent::StoreStats(const CuMatrixBase<BaseFloat> &in_value,
 }
 
 
+void* AMSoftmaxComponent::Propagate(const ComponentPrecomputedIndexes *indexes,
+                                 const CuMatrixBase<BaseFloat> &in,
+                                 CuMatrixBase<BaseFloat> *out) const {
+  // Apply softmax function to each row of the output...
+  // for that row, we do
+  // x_i = exp(x_i) / sum_j exp(x_j).
+  out->ApplyAMSoftMaxPerRow(in);
+
+  // This floor on the output helps us deal with
+  // almost-zeros in a way that doesn't lead to overflow.
+  out->ApplyFloor(1.0e-20);
+
+  return NULL;
+}
+
+void AMSoftmaxComponent::Backprop(const std::string &debug_info,
+                                const ComponentPrecomputedIndexes *indexes,
+                                const CuMatrixBase<BaseFloat> &, // in_value,
+                                const CuMatrixBase<BaseFloat> &out_value,
+                                const CuMatrixBase<BaseFloat> &out_deriv,
+                                void *memo,
+                                Component *to_update_in,
+                                CuMatrixBase<BaseFloat> *in_deriv) const {
+
+  if (to_update_in) {
+    AMSoftmaxComponent *to_update =
+        dynamic_cast<AMSoftmaxComponent*>(to_update_in);
+    to_update->StoreBackpropStats(out_deriv);
+  }
+
+  if (in_deriv == NULL)
+    return;
+  /*
+    Note on the derivative of the softmax function: let it be
+    p_i = exp(x_i) / sum_i exp_i
+    The [matrix-valued] Jacobian of this function is
+    diag(p) - p p^T
+    Let the derivative vector at the output be e, and at the input be
+    d.  We have
+    d = diag(p) e - p (p^T e).
+    d_i = p_i e_i - p_i (p^T e).
+  */
+  in_deriv->DiffSoftmaxPerRow(out_value, out_deriv);
+}
+
+void AMSoftmaxComponent::StoreStats(const CuMatrixBase<BaseFloat> &in_value,
+                                  const CuMatrixBase<BaseFloat> &out_value,
+                                  void *memo) {
+  // We don't store derivative stats for this component type, just activation
+  // stats.
+  StoreStatsInternal(out_value, NULL);
+}
+
+
 void* LogSoftmaxComponent::Propagate(const ComponentPrecomputedIndexes *indexes,
                                     const CuMatrixBase<BaseFloat> &in,
                                     CuMatrixBase<BaseFloat> *out) const {
   // Applies log softmax function to each row of the output. For each row, we do
   // x_i = x_i - log(sum_j exp(x_j))
-  out->ApplyLogSoftMaxPerRow(in);
+  out->ApplyLogAMSoftMaxPerRow(in);
   return NULL;
 }
 
@@ -3616,6 +3670,35 @@ void LogSoftmaxComponent::Backprop(const std::string &debug_info,
   if (to_update_in) {
     LogSoftmaxComponent *to_update =
         dynamic_cast<LogSoftmaxComponent*>(to_update_in);
+    to_update->StoreBackpropStats(out_deriv);
+  }
+  if (in_deriv == NULL)
+    return;
+  in_deriv->DiffLogSoftmaxPerRow(out_value, out_deriv);
+}
+
+
+void* LogAMSoftmaxComponent::Propagate(const ComponentPrecomputedIndexes *indexes,
+                                    const CuMatrixBase<BaseFloat> &in,
+                                    CuMatrixBase<BaseFloat> *out) const {
+  // Applies log softmax function to each row of the output. For each row, we do
+  // x_i = x_i - log(sum_j exp(x_j))
+  out->ApplyLogAMSoftMaxPerRow(in);
+  return NULL;
+}
+
+
+void LogAMSoftmaxComponent::Backprop(const std::string &debug_info,
+                                   const ComponentPrecomputedIndexes *indexes,
+                                   const CuMatrixBase<BaseFloat> &, // in_value
+                                   const CuMatrixBase<BaseFloat> &out_value,
+                                   const CuMatrixBase<BaseFloat> &out_deriv,
+                                   void *memo,
+                                   Component *to_update_in,
+                                   CuMatrixBase<BaseFloat> *in_deriv) const {
+  if (to_update_in) {
+    LogAMSoftmaxComponent *to_update =
+        dynamic_cast<LogAMSoftmaxComponent*>(to_update_in);
     to_update->StoreBackpropStats(out_deriv);
   }
   if (in_deriv == NULL)

@@ -1723,6 +1723,19 @@ void CuMatrixBase<Real>::ApplySoftMaxPerRow(const CuMatrixBase<Real> &src) {
 }
 
 template<typename Real> // Y->this, X->src
+void CuMatrixBase<Real>::ApplyAMSoftMaxPerRow(const CuMatrixBase<Real> &src) {
+  KALDI_ASSERT(SameDim(*this, src));
+  {
+    MatrixBase<Real> &mat(this->Mat());
+    mat.CopyFromMat(src.Mat());
+    for(MatrixIndexT r = 0; r < mat.NumRows(); r++) {
+      // TODO: ms to params
+      mat.Row(r).ApplyAMSoftMax(9.0);
+    }
+  }
+}
+
+template<typename Real> // Y->this, X->src
 void CuMatrixBase<Real>::ApplyLogSoftMaxPerRow(const CuMatrixBase<Real> &src) {
   KALDI_ASSERT(SameDim(*this, src));
 #if HAVE_CUDA == 1
@@ -1745,6 +1758,22 @@ void CuMatrixBase<Real>::ApplyLogSoftMaxPerRow(const CuMatrixBase<Real> &src) {
     }
   }
 }
+
+
+// TODO: Cuda
+template<typename Real> // Y->this, X->src
+void CuMatrixBase<Real>::ApplyLogAMSoftMaxPerRow(const CuMatrixBase<Real> &src) {
+  KALDI_ASSERT(SameDim(*this, src));
+  {
+    MatrixBase<Real> &mat(this->Mat());
+    mat.CopyFromMat(src.Mat());
+    for(MatrixIndexT r = 0; r < mat.NumRows(); r++) {
+      // TODO: m*s to params
+      mat.Row(r).ApplyLogAMSoftMax(9.0);
+    }
+  }
+}
+
 
 template<typename Real>
 void CuMatrixBase<Real>::DiffSigmoid(const CuMatrixBase<Real> &value,

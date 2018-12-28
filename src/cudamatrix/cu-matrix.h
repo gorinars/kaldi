@@ -417,12 +417,15 @@ class CuMatrixBase {
   /// Supports in-place operation (i.e. this == &src).
   void ApplySoftMaxPerRow(const CuMatrixBase<Real> &src);
 
+  void ApplyAMSoftMaxPerRow(const CuMatrixBase<Real> &src);
+
   /// LogSoftmax nonlinearity
   /// Y = LogSoftmax(X) : Yij = Xij - log(sum_k(e^Xik)), done to each row,
   /// with attention to avoiding  overflow or underflow.
   /// Supports in-place operation (i.e. this == &src).
   void ApplyLogSoftMaxPerRow(const CuMatrixBase<Real> &src);
 
+  void ApplyLogAMSoftMaxPerRow(const CuMatrixBase<Real> &src);
   /// Find the id of the maximal element for each row (resizes the 'id'
   /// array to the appropriate size).
   void FindRowMaxId(CuArray<int32> *id) const;

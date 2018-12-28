@@ -514,6 +514,46 @@ static void UnitTestSetRandUniform() {
 
 
 template <typename Real>
+static void UnitTestAMSoftMax() {  // testing AMSoftMax
+
+  Vector<Real> V(100), V1(100);
+  V.SetRandn();
+
+  V1.CopyFromVec(V);
+  KALDI_LOG << "BEFORE: ";
+  KALDI_LOG << V;
+  KALDI_LOG << V1;
+  Real b = V.ApplySoftMax();
+  Real b1 = V1.ApplyAMSoftMax(0.0f);
+  KALDI_LOG << "AFTER: ";
+  KALDI_LOG << "b=" << b << ", b1=" << b1;
+  KALDI_LOG << V;
+  KALDI_LOG << V1;
+  AssertEqual(b, b1);
+
+  /// log
+  V.SetRandn();
+  V1.CopyFromVec(V);
+  Real b2 = V.ApplyLogSoftMax();
+  Real b3 = V1.ApplyLogAMSoftMax(0.0f);
+  KALDI_LOG << "AFTER: ";
+  KALDI_LOG << "b=" << b2 << ", b1=" << b3;
+  KALDI_LOG << V;
+  KALDI_LOG << V1;
+  AssertEqual(b2, b3);
+
+  // check log makes same as non-log
+  V.SetRandn();
+  V1.CopyFromVec(V);
+  V.ApplyLogAMSoftMax(20.0f);
+  V1.ApplyAMSoftMax(20.0f);
+  V1.ApplyLog();
+  KALDI_LOG << V;
+  KALDI_LOG << V1;
+  AssertEqual(V, V1);
+}
+
+template <typename Real>
 static void UnitTestSimpleForVec() {  // testing some simple operators on vector
 
   for (MatrixIndexT i = 0; i < 5; i++) {
@@ -4675,6 +4715,7 @@ template<typename Real> static void MatrixUnitTest(bool full_test) {
   UnitTestRow<Real>();
   UnitTestSubvector<Real>();
   UnitTestRange<Real>();
+  UnitTestAMSoftMax<Real>();
   UnitTestSimpleForVec<Real>();
   UnitTestSetRandn<Real>();
   UnitTestSetRandUniform<Real>();

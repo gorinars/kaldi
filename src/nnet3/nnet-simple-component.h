@@ -703,6 +703,36 @@ class SoftmaxComponent: public NonlinearComponent {
   SoftmaxComponent &operator = (const SoftmaxComponent &other); // Disallow.
 };
 
+class AMSoftmaxComponent: public NonlinearComponent {
+ public:
+  explicit AMSoftmaxComponent(const AMSoftmaxComponent &other):
+      NonlinearComponent(other) { }
+  AMSoftmaxComponent() { }
+  virtual std::string Type() const { return "AMSoftmaxComponent"; }
+  virtual int32 Properties() const {
+    return kSimpleComponent|kPropagateInPlace|kBackpropInPlace|
+        kBackpropNeedsOutput|kStoresStats;
+  }
+  virtual void* Propagate(const ComponentPrecomputedIndexes *indexes,
+                         const CuMatrixBase<BaseFloat> &in,
+                         CuMatrixBase<BaseFloat> *out) const;
+  virtual void Backprop(const std::string &debug_info,
+                        const ComponentPrecomputedIndexes *indexes,
+                        const CuMatrixBase<BaseFloat> &in_value,
+                        const CuMatrixBase<BaseFloat> &out_value,
+                        const CuMatrixBase<BaseFloat> &out_deriv,
+                        void *memo,
+                        Component *to_update,
+                        CuMatrixBase<BaseFloat> *in_deriv) const;
+  virtual void StoreStats(const CuMatrixBase<BaseFloat> &in_value,
+                          const CuMatrixBase<BaseFloat> &out_value,
+                          void *memo);
+  virtual Component* Copy() const { return new AMSoftmaxComponent(*this); }
+ private:
+  AMSoftmaxComponent &operator = (const AMSoftmaxComponent &other); // Disallow.
+};
+
+
 
 /*
    Implements the log of a softmax nonlinearity, so it's the same
@@ -741,6 +771,33 @@ class LogSoftmaxComponent: public NonlinearComponent {
  private:
   LogSoftmaxComponent &operator = (const LogSoftmaxComponent &other); // Disallow.
 };
+
+class LogAMSoftmaxComponent: public NonlinearComponent {
+ public:
+  explicit LogAMSoftmaxComponent(const LogAMSoftmaxComponent &other):
+      NonlinearComponent(other) { }
+  LogAMSoftmaxComponent() { }
+  virtual std::string Type() const { return "LogAMSoftmaxComponent"; }
+  virtual int32 Properties() const {
+    return kSimpleComponent|kBackpropNeedsOutput|kStoresStats;
+  }
+  virtual void* Propagate(const ComponentPrecomputedIndexes *indexes,
+                         const CuMatrixBase<BaseFloat> &in,
+                         CuMatrixBase<BaseFloat> *out) const;
+  virtual void Backprop(const std::string &debug_info,
+                        const ComponentPrecomputedIndexes *indexes,
+                        const CuMatrixBase<BaseFloat> &in_value,
+                        const CuMatrixBase<BaseFloat> &out_value,
+                        const CuMatrixBase<BaseFloat> &out_deriv,
+                        void *memo,
+                        Component *to_update,
+                        CuMatrixBase<BaseFloat> *in_deriv) const;
+
+  virtual Component* Copy() const { return new LogAMSoftmaxComponent(*this); }
+ private:
+  LogAMSoftmaxComponent &operator = (const LogAMSoftmaxComponent &other); // Disallow.
+};
+
 
 /*
   Keywords: natural gradient descent, NG-SGD, naturalgradient.  For
