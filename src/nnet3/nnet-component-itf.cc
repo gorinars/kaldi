@@ -103,6 +103,8 @@ Component* Component::NewComponentOfType(const std::string &component_type) {
     ans = new SoftmaxComponent();
   } else if (component_type == "LogSoftmaxComponent") {
     ans = new LogSoftmaxComponent();
+  } else if (component_type == "LogAMSoftmaxComponent") {
+    ans = new LogAMSoftmaxComponent();
   } else if (component_type == "RectifiedLinearComponent") {
     ans = new RectifiedLinearComponent();
   } else if (component_type == "NormalizeComponent") {
